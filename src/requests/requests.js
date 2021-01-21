@@ -66,6 +66,28 @@ async function req(method, token, route, body, isJson = true) {
 }
 
 // ============================================== //
+// -------- WORKFLOW API REQUESTS GERAIS -------- //
+// ============================================== //
+
+export const getFunctions = async function () {
+  let response = null
+  let route = `http://localhost:4000/api/modules-functions`
+
+  response = await req('get', null, route, {})
+
+  return response
+}
+
+export const setSequence = async function (sequence) {
+  let response = null
+  let route = `http://localhost:4000/api/set-sequence/somesequence`
+
+  response = await req('post', null, route, sequence)
+
+  return response
+}
+
+// ============================================== //
 // -------------- REQUESTS GERAIS --------------- //
 // ============================================== //
 

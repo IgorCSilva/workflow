@@ -19,6 +19,7 @@
     "vue-offline": "^2.0.8",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.2.0",
+    "vue-simple-flowchart": "^0.1.8",
     "vue-snotify": "^3.2.1",
     "vuelidate": "^0.7.6",
     "vuex": "^3.4.0"

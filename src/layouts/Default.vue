@@ -1,15 +1,15 @@
 <template lang="pug">
   .default-layout
     comp-header
-    store
-    page-modal
-    pug
-    MaskValidation
-    Notifications
-    Storage
-    NetWork
-    Translate
-    Axios
+    //- store
+    //- page-modal
+    //- pug
+    //- MaskValidation
+    //- Notifications
+    //- Storage
+    //- NetWork
+    //- Translate
+    //- Axios
     
     slot
 
