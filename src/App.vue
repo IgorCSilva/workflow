@@ -9,7 +9,10 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { getFunctions } from '@/requests/requests'
+import { 
+  getFunctions,
+  getSequences  
+} from '@/requests/requests'
 
 const DefaultLayout = () => import(/* webpackChunkName: "vsf-layout-default" */ '@/layouts/Default')
 const MinimalLayout = () => import(/* webpackChunkName: "vsf-layout-default" */ '@/layouts/Minimal')
@@ -28,6 +31,18 @@ export default {
     }
   },
   created() {
+    // Buscando sequências já existentes.
+    getSequences()
+      .then(resp => {
+        console.log(resp)
+        if (resp && resp.status == 200) {
+          console.log('sequences: ', resp.data)
+          this.setSequences(resp.data.data)
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
     getFunctions()
       .then(resp => {
         console.log(resp)
@@ -42,7 +57,8 @@ export default {
   },
   methods: {
     ...mapActions({
-      setModulesFunctions: 'workflow/setModulesFunctions'
+      setModulesFunctions: 'workflow/setModulesFunctions',
+      setSequences: 'workflow/setSequences'
     })
   }
   

@@ -1,3 +1,5 @@
 export interface formatState {
-  modulesFunctions: any[]
+  modulesFunctions: any[],
+  sequences: any[],
+  currentSequence: object
 }

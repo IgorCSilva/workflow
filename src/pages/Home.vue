@@ -3,6 +3,13 @@
     img(alt="Vue logo", src="../assets/logo.png")
     p(@click="sayHello") Click me to say hello
     
+
+    .sequences-buttons
+      h4 Lista de sequências existentes
+      //- p {{ sequences }}
+      .sequence-button(v-for="(sequence, index) in sequences" :key="sequence + index")
+        span(@click="selectSequence(sequence)") {{ sequence.name }}
+
     .row
       .col-xs-2
         .module-box(v-for="(block, index) in modulesFunctions" :key="`${block.module}-${index}`")
@@ -15,7 +22,7 @@
             p {{ functionBlock.name }} / {{ functionBlock.arity}}
 
       .col-xs-8
-        simple-flowchart(:scene.sync="data" :scale="2" :height="800")
+        simple-flowchart(:scene.sync="currentSequence" :height="800")
       .col-xs-2
         .arguments-box(v-for="(argumentBlock, index) in listArgumentsBlocks")
           p {{ argumentBlock.module }} {{ argumentBlock.function }}
@@ -24,7 +31,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import  Home from '@/core/compatibility/Home.js'
 import SimpleFlowchart from 'vue-simple-flowchart';
 import 'vue-simple-flowchart/dist/vue-flowchart.css';
@@ -40,43 +47,66 @@ export default {
   data() {
     return {
       listArgumentsBlocks: [],
-      data: {
-        centerX: 10,
-        centerY: 10,
-        scale: 1,
-        nodes: [
-          {
-            id: 1,
-            x: 200,
-            y: 200,
-            type: 'Início',
-            label: 'Início'
-          }
-        ],
-        links: [
-        ]
+      initialBlock:{
+        id: 1,
+        x: 200,
+        y: 200,
+        type: 'Início',
+        label: 'Início'
       },
     };
   },
   computed: {
     ...mapState({
-      modulesFunctions: state => state.workflow.modulesFunctions
+      modulesFunctions: state => state.workflow.modulesFunctions,
+      sequences: state => state.workflow.sequences,
+      currentSequence: state => state.workflow.currentSequence
     })
   },
   methods: {
+    ...mapActions({
+      setCurrentSequence: 'workflow/setCurrentSequence'
+    }),
+    selectSequence(sequence) {
+      console.log(sequence.sequence.sequence)
+
+      let nodes = sequence.sequence.sequence.map(s => {
+        return {
+          id: s.id,
+          x: s.x,
+          y: s.y,
+          type: s.module,
+          label: s.function
+        }
+      })
+
+      let links = sequence.sequence.links
+
+      let currentSequence = {
+        centerX: 10,
+        centerY: 10,
+        scale: 1,
+        nodes: [this.initialBlock].concat(nodes),
+        links
+      }
+      console.log(currentSequence)
+      this.setCurrentSequence(currentSequence)
+
+    },
     addBlock(moduleName, functionName) {
-      this.data.nodes.push({
+      console.log(this.currentSequence)
+      this.currentSequence.nodes.push({
         id: this.getBlockId(),
         x: 100,
         y: 100,
         type: moduleName,
         label: functionName
       })
-      console.log(this.data)
+      // console.log(this.data)
     },
     addedBlocks() {
-      let nodes = this.data.nodes
-      let links = JSON.parse(JSON.stringify(this.data.links)) 
+      let nodes = this.currentSequence.nodes
+      let links = JSON.parse(JSON.stringify(this.currentSequence.links)) 
       let listArgumentsBlocks = []
       // console.log(links)
       let currentLink = links.find(l => {
@@ -119,14 +149,21 @@ export default {
         })
 
         return {
+          id: lBlock.id,
           module: lBlock.type,
           function: theFunction.name,
-          arity: theFunction.arity
+          arity: theFunction.arity,
+          x: lBlock.x,
+          y: lBlock.y
         }
       })
       this.listArgumentsBlocks = listArgumentsBlocks
 
-      setSequence(listArgumentsBlocks)
+      let sequenceToSave = {
+        sequence: listArgumentsBlocks,
+        links: this.currentSequence.links
+      }
+      setSequence(sequenceToSave)
         .then(resp => {
           console.log(resp)
         })
@@ -136,11 +173,11 @@ export default {
     },
     getBlockId() {
       let id = 0
-
-      if (this.data.nodes.length == 0) {
+      let nodes = this.currentSequence.nodes
+      if (nodes.length == 0) {
         id = 1
       } else {
-        for (let block of this.data.nodes) {
+        for (let block of nodes) {
           if (block.id >= id) {
             id = block.id
           }
