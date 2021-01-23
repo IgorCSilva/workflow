@@ -10,6 +10,7 @@
 <script>
 import { mapActions } from 'vuex'
 import { 
+  getModules,
   getFunctions,
   getSequences  
 } from '@/requests/requests'
@@ -31,6 +32,19 @@ export default {
     }
   },
   created() {
+    // Buscando módulos disponíveis para manipulação.
+    getModules()
+      .then(resp => {
+        console.log(resp)
+        if (resp && resp.status == 200) {
+          console.log('modules: ', resp.data)
+          this.setModulesFunctions(resp.data.data)
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
+
     // Buscando sequências já existentes.
     getSequences()
       .then(resp => {
@@ -43,17 +57,18 @@ export default {
       .catch(error => {
         console.error(error)
       })
-    getFunctions()
-      .then(resp => {
-        console.log(resp)
-        if (resp && resp.status == 200) {
-          console.log(resp.data)
-          this.setModulesFunctions(resp.data.data)
-        }
-      })
-      .catch(error => {
-        console.error(error)
-      })
+
+    // getFunctions()
+    //   .then(resp => {
+    //     console.log(resp)
+    //     if (resp && resp.status == 200) {
+    //       console.log(resp.data)
+    //       this.setModulesFunctions(resp.data.data)
+    //     }
+    //   })
+    //   .catch(error => {
+    //     console.error(error)
+    //   })
   },
   methods: {
     ...mapActions({

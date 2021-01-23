@@ -12,14 +12,14 @@
 
     .row
       .col-xs-2
-        .module-box(v-for="(block, index) in modulesFunctions" :key="`${block.module}-${index}`")
-          p {{ block.module }}
+        .module-box(v-for="moduleBlock in modulesFunctions" :key="moduleBlock.id")
+          p {{ moduleBlock.label }}
           .function-box(
-            v-for="(functionBlock, index) in block.functions"
-            :key="`${functionBlock.name}-${index}`"
-            @click="addBlock(block.module, functionBlock.name)"
+            v-for="functionBlock in moduleBlock.functions"
+            :key="functionBlock.id"
+            @click="addBlock(moduleBlock.label, functionBlock.label)"
           )
-            p {{ functionBlock.name }} / {{ functionBlock.arity}}
+            p {{ functionBlock.label }} / {{ functionBlock.arity}}
 
       .col-xs-8
         simple-flowchart(:scene.sync="currentSequence" :height="800")
@@ -191,3 +191,20 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.module-box {
+  border: 2px solid orange;
+  border-radius: 10px;
+  margin: 10px 3px;
+  padding: 5px;
+}
+
+.function-box {
+  cursor: pointer;
+  border: 2px dotted skyblue;
+  border-radius: 15px;
+  margin: 5px 0;
+  padding: 5px;
+}
+</style>

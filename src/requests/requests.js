@@ -69,6 +69,15 @@ async function req(method, token, route, body, isJson = true) {
 // ----------- WORKFLOW API REQUESTS ------------ //
 // ============================================== //
 
+export const getModules = async function () {
+  let response = null
+  let route = `http://localhost:4000/api/module/list`
+
+  response = await req('get', null, route, {})
+
+  return response
+}
+
 export const getFunctions = async function () {
   let response = null
   let route = `http://localhost:4000/api/modules-functions`
