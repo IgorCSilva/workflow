@@ -24,10 +24,10 @@
       .col-xs-8
         simple-flowchart(:scene.sync="currentSequence" :height="800")
       .col-xs-2
-        .arguments-box(v-for="(argumentBlock, index) in listArgumentsBlocks")
-          p {{ argumentBlock.module }} {{ argumentBlock.function }}
+        .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
+          p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
 
-    button(@click="addedBlocks()") Add block
+    button(@click="verifySequence()") Add block
 </template>
 
 <script>
@@ -46,7 +46,7 @@ export default {
   },
   data() {
     return {
-      listArgumentsBlocks: [],
+      listSequenceBlocks: [],
       initialBlock:{
         id: 1,
         x: 200,
@@ -104,27 +104,30 @@ export default {
       })
       // console.log(this.data)
     },
-    addedBlocks() {
+    verifySequence() {
       let nodes = this.currentSequence.nodes
-      let links = JSON.parse(JSON.stringify(this.currentSequence.links)) 
-      let listArgumentsBlocks = []
-      // console.log(links)
+      let links = JSON.parse(JSON.stringify(this.currentSequence.links))
+
+      let listSequenceBlocks = []
+      // Pegando o link inicial.
       let currentLink = links.find(l => {
         return l.from == 1
       })
-      // console.log(currentLink)
+
       if (currentLink) {
+        // Removendo o link da lista de links.
         links = links.filter(l => {
           return l.from != currentLink.from || l.to != currentLink.to
         })
-        // console.log(currentLink.to)
-        listArgumentsBlocks.push(nodes.find(n => {
+        
+        listSequenceBlocks.push(nodes.find(n => {
           return n.id == currentLink.to
         }))
+
         let nextLink = {}
         while(nextLink = links.find(l => { return currentLink.to == l.from})) {
           // console.log(nextLink.to)
-          listArgumentsBlocks.push(nodes.find(n => {
+          listSequenceBlocks.push(nodes.find(n => {
             return n.id == nextLink.to
           }))
           currentLink = nextLink
@@ -135,32 +138,33 @@ export default {
       }
 
       // Removendo o bloco de início.
-      listArgumentsBlocks = listArgumentsBlocks.filter(block => {
+      listSequenceBlocks = listSequenceBlocks.filter(block => {
         return block.id != 1
       })
-      console.log(listArgumentsBlocks)
+      console.log(listSequenceBlocks)
+      console.log(this.modulesFunctions)
       console.log('Arity')
-      listArgumentsBlocks = listArgumentsBlocks.map(lBlock => {
+      listSequenceBlocks = listSequenceBlocks.map(lBlock => {
         let theModule = this.modulesFunctions.find(mf => {
-          return mf.module == lBlock.type
+          return mf.label == lBlock.type
         })
         let theFunction = theModule.functions.find(f => {
-          return f.name == lBlock.label
+          return f.label == lBlock.label
         })
 
         return {
           id: lBlock.id,
-          module: lBlock.type,
-          function: theFunction.name,
-          arity: theFunction.arity,
+          functionId: theFunction.id,
           x: lBlock.x,
           y: lBlock.y
         }
       })
-      this.listArgumentsBlocks = listArgumentsBlocks
+      this.listSequenceBlocks = listSequenceBlocks
+
+      console.log(listSequenceBlocks, this.currentSequence.links)
 
       let sequenceToSave = {
-        sequence: listArgumentsBlocks,
+        sequence: listSequenceBlocks,
         links: this.currentSequence.links
       }
       setSequence(sequenceToSave)

@@ -98,7 +98,7 @@ export const getSequences = async function () {
 
 export const setSequence = async function (sequence) {
   let response = null
-  let route = `http://localhost:4000/api/set-sequence/somesequence`
+  let route = `http://localhost:4000/api/sequence/set/somesequence`
 
   response = await req('post', null, route, sequence)
 
