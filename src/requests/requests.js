@@ -89,7 +89,7 @@ export const getFunctions = async function () {
 
 export const getSequences = async function () {
   let response = null
-  let route = `http://localhost:4000/api/sequences`
+  let route = `http://localhost:4000/api/sequence/list`
 
   response = await req('get', null, route, {})
 
@@ -98,9 +98,18 @@ export const getSequences = async function () {
 
 export const setSequence = async function (sequence) {
   let response = null
-  let route = `http://localhost:4000/api/sequence/set/somesequence`
+  let route = `http://localhost:4000/api/sequence/create`
 
   response = await req('post', null, route, sequence)
+
+  return response
+}
+
+export const updateSequence = async function (sequence, sequence_id) {
+  let response = null
+  let route = `http://localhost:4000/api/sequence/update/${sequence_id}`
+
+  response = await req('put', null, route, sequence)
 
   return response
 }

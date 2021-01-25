@@ -2,13 +2,17 @@
   .home
     img(alt="Vue logo", src="../assets/logo.png")
     p(@click="sayHello") Click me to say hello
-    
+
+    .create-sequence
+      h3 Cria uma sequência
+      input(v-model="newSequenceName" placeholder="Nome da sequência")
+      button(@click="createNewSequence()") Criar
 
     .sequences-buttons
       h4 Lista de sequências existentes
       //- p {{ sequences }}
-      .sequence-button(v-for="(sequence, index) in sequences" :key="sequence + index")
-        span(@click="selectSequence(sequence)") {{ sequence.name }}
+      .sequence-button(v-for="(sequence, index) in sequences" :key="sequence + index" @click="selectSequence(sequence)")
+        span {{ sequence.name }}
 
     .row
       .col-xs-2
@@ -27,7 +31,8 @@
         .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
           p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
 
-    button(@click="verifySequence()") Add block
+    button(v-if="currentSequence.id" @click="updateCurrentSequence()") Update sequence
+    button(v-else @click="saveCurrentSequence()") Create sequence
 </template>
 
 <script>
@@ -36,7 +41,10 @@ import  Home from '@/core/compatibility/Home.js'
 import SimpleFlowchart from 'vue-simple-flowchart';
 import 'vue-simple-flowchart/dist/vue-flowchart.css';
 
-import { setSequence } from '@/requests/requests'
+import { 
+  setSequence,
+  updateSequence
+} from '@/requests/requests'
 
 export default {
   name: 'Home',
@@ -46,6 +54,7 @@ export default {
   },
   data() {
     return {
+      newSequenceName: '',
       listSequenceBlocks: [],
       initialBlock:{
         id: 1,
@@ -67,22 +76,75 @@ export default {
     ...mapActions({
       setCurrentSequence: 'workflow/setCurrentSequence'
     }),
-    selectSequence(sequence) {
-      console.log(sequence.sequence.sequence)
+    createNewSequence() {
+      console.log(this.newSequenceName, this.sequences)
+      let sequence = this.sequences.find(s => {
+        return s.name === this.newSequenceName
+      })
 
-      let nodes = sequence.sequence.sequence.map(s => {
+      if (sequence == undefined) {
+        this.sequences.push({
+          id: null,
+          description: '',
+          name: this.newSequenceName,
+          links: [],
+          blocks: []
+        })
+      }
+    },
+    selectSequence(sequence) {
+      console.log(sequence, this.modulesFunctions)
+      let moduleBlock = {}
+      let functionBlock = {}
+
+      let nodes = []
+      if (sequence.blocks.length > 0) {
+
+        // Removendo blocos com ids repetidos, já que no back eles são salvos assim.
+        let uniqueBlocks = []
+        let currentBlock = {}
+        for (let b of sequence.blocks) {
+          currentBlock = uniqueBlocks.find(ub => {
+            return ub.workflow_block_id === b.workflow_block_id
+          })
+          if (currentBlock == undefined) {
+            uniqueBlocks.push(b)
+          }
+        }
+        
+        // Montando nós para alimentar o fluxograma.
+        nodes = uniqueBlocks.map(block => {
+          moduleBlock = this.modulesFunctions.find(mb => {
+            functionBlock = mb.functions.find(fb => {
+              return fb.id == block.function_id
+            })
+
+            return functionBlock
+          })
+
+
+          return {
+            id: block.workflow_block_id,
+            x: block.workflow_block_pos_x,
+            y: block.workflow_block_pos_y,
+            type: moduleBlock.label,
+            label: functionBlock.label
+          }
+        })
+      }
+      
+
+      let links = sequence.links.map(link => {
         return {
-          id: s.id,
-          x: s.x,
-          y: s.y,
-          type: s.module,
-          label: s.function
+          id: link.workflow_link_id,
+          from: link.from,
+          to: link.to
         }
       })
 
-      let links = sequence.sequence.links
-
       let currentSequence = {
+        id: sequence.id,
+        name: sequence.name,
         centerX: 10,
         centerY: 10,
         scale: 1,
@@ -92,6 +154,15 @@ export default {
       console.log(currentSequence)
       this.setCurrentSequence(currentSequence)
 
+    },
+    availableFunctions() {
+      let functions = []
+
+      for (let moduleBlock of this.modulesFunctions) {
+        functions = functions.concat(moduleBlock.functions)
+      }
+
+      return functions
     },
     addBlock(moduleName, functionName) {
       console.log(this.currentSequence)
@@ -167,7 +238,26 @@ export default {
         sequence: listSequenceBlocks,
         links: this.currentSequence.links
       }
+      
+      return sequenceToSave
+    },
+    saveCurrentSequence() {
+      let sequenceToSave = this.verifySequence()
+      sequenceToSave.name = this.currentSequence.name
+
+      console.log(sequenceToSave)
       setSequence(sequenceToSave)
+        .then(resp => {
+          console.log(resp)
+        })
+        .catch(error => {
+          console.error(error)
+        })
+    },
+    updateCurrentSequence() {
+      // console.log(this.currentSequence.id)
+      // console.log(this.verifySequence())
+      updateSequence(this.verifySequence(), this.currentSequence.id)
         .then(resp => {
           console.log(resp)
         })
@@ -197,6 +287,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.sequence-button {
+  cursor: pointer;
+  border: 2px dotted skyblue;
+  border-radius: 15px;
+  margin: 5px auto;
+  padding: 5px;
+  max-width: 200px;
+}
 .module-box {
   border: 2px solid orange;
   border-radius: 10px;
