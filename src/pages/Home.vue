@@ -5,6 +5,7 @@
 
     .create-sequence
       h3 Cria uma sequência
+      
       input(v-model="newSequenceName" placeholder="Nome da sequência")
       button(@click="createNewSequence()") Criar
 
@@ -17,7 +18,10 @@
     .row
       .col-xs-2
         .module-box(v-for="moduleBlock in modulesFunctions" :key="moduleBlock.id")
-          p {{ moduleBlock.label }}
+          .module-title
+            span {{ moduleBlock.label }}
+            Tooltip.tooltip {{ moduleBlock.description }}
+
           .function-box(
             v-for="functionBlock in moduleBlock.functions"
             :key="functionBlock.id"
@@ -31,8 +35,8 @@
         .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
           p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
 
-    button(v-if="currentSequence.id" @click="updateCurrentSequence()") Update sequence
-    button(v-else @click="saveCurrentSequence()") Create sequence
+    button(v-if="currentSequence.id" @click="validateSequence('update')") Update sequence
+    button(v-else @click="validateSequence('create')") Create sequence
 </template>
 
 <script>
@@ -41,6 +45,12 @@ import  Home from '@/core/compatibility/Home.js'
 import SimpleFlowchart from 'vue-simple-flowchart';
 import 'vue-simple-flowchart/dist/vue-flowchart.css';
 
+// Components.
+import Tooltip from '@/components/Tooltip.vue'
+
+// Mixins.
+import Notifications from '@/core/compatibility/Notifications.js'
+
 import { 
   setSequence,
   updateSequence
@@ -48,9 +58,10 @@ import {
 
 export default {
   name: 'Home',
-  mixins: [Home],
+  mixins: [Home, Notifications],
   components: {
-    SimpleFlowchart
+    SimpleFlowchart,
+    Tooltip
   },
   data() {
     return {
@@ -212,9 +223,7 @@ export default {
       listSequenceBlocks = listSequenceBlocks.filter(block => {
         return block.id != 1
       })
-      console.log(listSequenceBlocks)
-      console.log(this.modulesFunctions)
-      console.log('Arity')
+      
       listSequenceBlocks = listSequenceBlocks.map(lBlock => {
         let theModule = this.modulesFunctions.find(mf => {
           return mf.label == lBlock.type
@@ -232,14 +241,73 @@ export default {
       })
       this.listSequenceBlocks = listSequenceBlocks
 
-      console.log(listSequenceBlocks, this.currentSequence.links)
-
       let sequenceToSave = {
         sequence: listSequenceBlocks,
         links: this.currentSequence.links
       }
       
       return sequenceToSave
+    },
+    validateSequence (action) {
+      console.log('ACTION: ', action)
+      let validSequence = false
+
+      let functions = this.availableFunctions()
+      let sequenceFunctions = (this.verifySequence().sequence).map(f => {
+        let fc = functions.find(func => {
+          return func.id == f.functionId
+        })
+        
+        return fc
+      })
+      
+      if (sequenceFunctions.length == 0) {
+        console.log('A sequência está vazia.')
+      } else if (sequenceFunctions.length == 1) {
+        validSequence = true
+      } else {
+        let parsedArgument = null
+        let matchResponseArgument = false
+        let someNoMatch = false
+
+        for (let i = 1; i < sequenceFunctions.length; i++) {
+          console.log(sequenceFunctions[i - 1].responsesType, sequenceFunctions[i].argumentsType, (sequenceFunctions[i].argumentsType).length == 0)
+
+          if (sequenceFunctions[i - 1].responsesType.length == 0 ||
+              (sequenceFunctions[i].argumentsType).length == 0) {
+
+            matchResponseArgument = true
+          } else {
+            matchResponseArgument = sequenceFunctions[i - 1].responsesType[0] == (sequenceFunctions[i].argumentsType)[0]
+
+            if (!matchResponseArgument) {
+              try {
+                parsedArgument = (sequenceFunctions[i].argumentsType)[0].replaceAll(' ', '').split(',')
+                matchResponseArgument = parsedArgument.includes(sequenceFunctions[i - 1].responsesType[0])
+              } catch (error) {
+                matchResponseArgument = false
+                console.log(error)
+              }
+            }
+          }
+           
+          console.log(matchResponseArgument)
+          if (!matchResponseArgument) {
+            someNoMatch = true
+          }
+        }
+
+        validSequence = !someNoMatch
+      }
+
+      if (!validSequence) {
+        this.notifInvalidSequence()
+      } else {
+        this.notifValidSequence()
+        if (action == 'update') {
+          this.updateCurrentSequence()
+        }
+      }
     },
     saveCurrentSequence() {
       let sequenceToSave = this.verifySequence()
@@ -255,8 +323,6 @@ export default {
         })
     },
     updateCurrentSequence() {
-      // console.log(this.currentSequence.id)
-      // console.log(this.verifySequence())
       updateSequence(this.verifySequence(), this.currentSequence.id)
         .then(resp => {
           console.log(resp)
@@ -300,6 +366,13 @@ export default {
   border-radius: 10px;
   margin: 10px 3px;
   padding: 5px;
+}
+.module-title {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.module-title .tooltip {
+  margin-left: 10px;
 }
 
 .function-box {
