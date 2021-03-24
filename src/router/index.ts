@@ -5,12 +5,18 @@ import Home from '../pages/Home.vue'
 Vue.use(VueRouter)
 
 const Show = () => import('@/pages/Show.vue')
+const VueDraggableNext = () => import('../pages/VueDraggableNext.vue')
 
 const routes: Array<RouteConfig> = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/vue-draggable-next',
+    name: 'vue-draggable-next',
+    component: VueDraggableNext
   },
   {
     path: '/about',
