@@ -1,55 +1,167 @@
 <template lang="pug">
   .vue-draggable
-    h1 DRAGGABLE
-    #simpleList.list-group.row
-      .list-group-item(v-for="item in myArray" :key="item.id")
-        span.glyphicon-move  X 
-        span {{ item.name }}
+    //- h1 DRAGGABLE
+    //- #simpleList.list-group.row
+    //-   .list-group-item(v-for="item in myArray" :key="item.id")
+    //-     span.glyphicon-move  X 
+    //-     span {{ item.name }}
 
 
-    button(@click="addItem") Add item
-    button(@click="showList") Show List
+    //- button(@click="addItem") Add item
+    //- button(@click="showList") Show List
+
+    .home
+      img(alt="Vue logo", src="../assets/logo.png")
+      p Click me to say hello
+
+      .create-sequence
+        h3 Cria uma sequência
+        
+        //- input(v-model="newSequenceName" placeholder="Nome da sequência")
+        //- button(@click="createNewSequence()") Criar
+
+      .sequences-buttons
+        h4 Lista de sequências existentes
+        
+        //- .sequence-button(v-for="(sequence, index) in sequences" :key="sequence + index" @click="selectSequence(sequence)")
+        //-   span {{ sequence.name }}
+
+      .row
+        #module-box.col-xs-2
+          .module-box(v-for="moduleBlock in getModulesFunction" :key="moduleBlock.id")
+            .module-title
+              span {{ moduleBlock.label }}
+              //- Tooltip.tooltip {{ moduleBlock.description }}
+
+            .list-function-box(:id="functionIdPrefix + moduleBlock.id")
+              .function-box(
+                v-for="functionBlock in moduleBlock.functions"
+                :key="functionBlock.id"
+                :id="functionBlock.id"
+              )
+                p {{ functionBlock.label }} / {{ functionBlock.arity}}
+
+        .col-xs-8
+          #sequence-area.sequence-area-box
+        .col-xs-2
+          //- .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
+          //-   p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
+
+      //- button(v-if="currentSequence.id" @click="validateSequence('update')") Update sequence
+      //- button(v-else @click="validateSequence('create')") Create sequence
 </template>
 
 
 <script>
 // link: http://sortablejs.github.io/Sortable/
 
+import { eventBus } from '@/main.ts'
+import { mapState, mapGetters, mapActions } from 'vuex'
+
 export default {
   name: 'VueDraggableNext',
-  mounted () {
-    let simpleList = document.getElementById('simpleList')
-    let self = this
-    Sortable.create(simpleList, {
-      animation: 1000,
-      ghostClass: 'ghost-class',
-      onEnd: function (/**Event*/evt) {
-        // var itemEl = evt.item;  // dragged HTMLElement
-        // evt.to;    // target list
-        // evt.from;  // previous list
-        // evt.oldIndex;  // element's old index within old parent
-        // evt.newIndex;  // element's new index within new parent
-        // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
-        // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
-        // evt.clone // the clone element
-        // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
-        
-        // Removendo da lista o item movido.
-        let choosedItem = self.myArray.splice(evt.oldIndex, 1)
-        // Colocando na lista o item movido, na sua nova posição.
-        self.myArray.splice(evt.newIndex, 0, choosedItem[0])
-      }
-    });
+  beforeMount () {
+    eventBus.$on('create-sortables', this.createSortables)
+  },
+  beforeDestroy () {
+    eventBus.$off('create-sortables', this.createSortables)
   },
   data () {
     return {
-      myArray: [
-        { id: 1, name: 'igor' },
-        { id: 2, name: 'igoru' }
-      ]
+      functionIdPrefix: 'function-box'
     }
   },
+  computed: {
+    ...mapState({
+      sequences: state => state.workflow.sequences,
+      currentSequence: state => state.workflow.currentSequence
+    }),
+    ...mapGetters({
+      getModulesFunction: 'workflow/getModulesFunction'
+    })
+  },
   methods: {
+    createSortables () {
+      let sequenceArea = document.getElementById('sequence-area')
+      let self = this
+      
+      // Criando Sortables para os blocos das funções.
+      for (let moduleBlock of this.getModulesFunction) {
+        let functionList = document.getElementById(this.functionIdPrefix + moduleBlock.id)
+
+        Sortable.create(functionList, {
+          group: {
+            name: 'mount-sequence',
+            pull: 'clone',
+            put: false
+          },
+          sort: false,
+          animation: 600,
+          ghostClass: 'ghost-class',
+          onEnd: function (/**Event*/evt) {
+            // var itemEl = evt.item;  // dragged HTMLElement
+            // evt.to;    // target list
+            // evt.from;  // previous list
+            // evt.oldIndex;  // element's old index within old parent
+            // evt.newIndex;  // element's new index within new parent
+            // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
+            // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
+            // evt.clone // the clone element
+            // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
+            
+            // // Removendo da lista o item movido.
+            // let choosedItem = self.myArray.splice(evt.oldIndex, 1)
+            // // Colocando na lista o item movido, na sua nova posição.
+            // self.myArray.splice(evt.newIndex, 0, choosedItem[0])
+          }
+        });
+      }
+
+      // Criando Sortable da sequência.
+      Sortable.create(sequenceArea, {
+        group: 'mount-sequence',
+        animation: 600,
+        onAdd: function (/**Event*/evt) {
+          console.log('ON ADD')
+          // var itemEl = evt.item;  // dragged HTMLElement
+          // evt.to;    // target list
+          // evt.from;  // previous list
+          // evt.oldIndex;  // element's old index within old parent
+          // evt.newIndex;  // element's new index within new parent
+          // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
+          // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
+          // evt.clone // the clone element
+          // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
+
+          // console.log(evt)
+          
+          console.log('Function id: ', evt.item.id, evt.newDraggableIndex)
+          // // Removendo da lista o item movido.
+          // let choosedItem = self.myArray.splice(evt.oldIndex, 1)
+          // // Colocando na lista o item movido, na sua nova posição.
+          // self.myArray.splice(evt.newIndex, 0, choosedItem[0])
+        },
+        onEnd: function (/**Event*/evt) {
+          console.log('ON END')
+          // var itemEl = evt.item;  // dragged HTMLElement
+          // evt.to;    // target list
+          // evt.from;  // previous list
+          // evt.oldIndex;  // element's old index within old parent
+          // evt.newIndex;  // element's new index within new parent
+          // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
+          // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
+          // evt.clone // the clone element
+          // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
+
+          console.log('De ' + evt.oldIndex + ' para ' + evt.newIndex)
+          
+          // // Removendo da lista o item movido.
+          // let choosedItem = self.myArray.splice(evt.oldIndex, 1)
+          // // Colocando na lista o item movido, na sua nova posição.
+          // self.myArray.splice(evt.newIndex, 0, choosedItem[0])
+        }
+      })
+    },
     addItem () {
       this.myArray.push(
         {
@@ -67,22 +179,41 @@ export default {
 }
 </script>
 
+
 <style lang="scss" scoped>
-.list-group-item {
-  margin: 3px;
-  width: 100px;
-  height: 100px;
-  background-color: peachpuff;
-  transition: all .5s;
-
-  &.ghost-class {
-    // transform: scale(.8)
-  }
-
+.sequence-button {
+  cursor: pointer;
+  border: 2px dotted skyblue;
+  border-radius: 15px;
+  margin: 5px auto;
+  padding: 5px;
+  max-width: 200px;
+}
+.module-box {
+  border: 2px solid orange;
+  border-radius: 10px;
+  margin: 10px 3px;
+  padding: 5px;
+}
+.module-title {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.module-title .tooltip {
+  margin-left: 10px;
 }
 
-.ghost-class {
-  background-color: plum;
-  // transform: scale(.8);
+.function-box {
+  cursor: pointer;
+  border: 2px dotted skyblue;
+  border-radius: 15px;
+  margin: 5px 0;
+  padding: 5px;
+}
+.sequence-area-box {
+  background-color: papayawhip;
+  border: 2px solic purple;
+  width: 100%;
+  height: 100%;
 }
 </style>

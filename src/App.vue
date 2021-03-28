@@ -8,6 +8,8 @@
 </template>
 
 <script>
+import { eventBus } from '@/main.ts'
+
 import { mapActions } from 'vuex'
 import { 
   getModules,
@@ -39,24 +41,28 @@ export default {
         if (resp && resp.status == 200) {
           console.log('modules: ', resp.data)
           this.setModulesFunctions(resp.data.data)
+
+          // Buscando sequências já existentes.
+          getSequences()
+            .then(resp => {
+              console.log(resp)
+              if (resp && resp.status == 200) {
+                console.log('sequences: ', resp.data)
+                this.setSequences(resp.data.data)
+
+                eventBus.$emit('create-sortables')
+              }
+            })
+            .catch(error => {
+              console.error(error)
+            })
         }
       })
       .catch(error => {
         console.error(error)
       })
 
-    // Buscando sequências já existentes.
-    getSequences()
-      .then(resp => {
-        console.log(resp)
-        if (resp && resp.status == 200) {
-          console.log('sequences: ', resp.data)
-          this.setSequences(resp.data.data)
-        }
-      })
-      .catch(error => {
-        console.error(error)
-      })
+    
 
     // getFunctions()
     //   .then(resp => {
