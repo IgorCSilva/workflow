@@ -8,7 +8,7 @@
 
 
     //- button(@click="addItem") Add item
-    //- button(@click="showList") Show List
+    button(@click="showList") Show List
 
     .home
       img(alt="Vue logo", src="../assets/logo.png")
@@ -43,6 +43,10 @@
 
         .col-xs-8
           #sequence-area.sequence-area-box
+            .sequence-block(
+              v-for="sequenceBlock in localCurrentSequence"
+              :key="sequenceBlock.id + sequenceBlock.position"
+            ) {{ sequenceBlock.id}}
         .col-xs-2
           //- .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
           //-   p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
@@ -68,7 +72,8 @@ export default {
   },
   data () {
     return {
-      functionIdPrefix: 'function-box'
+      functionIdPrefix: 'function-box',
+      localCurrentSequence: []
     }
   },
   computed: {
@@ -121,6 +126,7 @@ export default {
       Sortable.create(sequenceArea, {
         group: 'mount-sequence',
         animation: 600,
+        ghostClass: 'sequence-block',
         onAdd: function (/**Event*/evt) {
           console.log('ON ADD')
           // var itemEl = evt.item;  // dragged HTMLElement
@@ -136,10 +142,26 @@ export default {
           // console.log(evt)
           
           console.log('Function id: ', evt.item.id, evt.newDraggableIndex)
-          // // Removendo da lista o item movido.
-          // let choosedItem = self.myArray.splice(evt.oldIndex, 1)
-          // // Colocando na lista o item movido, na sua nova posição.
-          // self.myArray.splice(evt.newIndex, 0, choosedItem[0])
+
+          let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
+
+          tempCurrentSequence.splice(
+            evt.newDraggableIndex,
+            0,
+            {
+              id: evt.item.id,
+              position: 0
+            }
+          )
+
+          for (let i = 0; i < tempCurrentSequence.length; i++) {
+            tempCurrentSequence[i].position = i
+          }
+
+          self.localCurrentSequence = tempCurrentSequence
+
+          // Removendo item para que não influencie na definição das posições dos elementos.
+          evt.item.remove()
         },
         onEnd: function (/**Event*/evt) {
           console.log('ON END')
@@ -155,10 +177,13 @@ export default {
 
           console.log('De ' + evt.oldIndex + ' para ' + evt.newIndex)
           
-          // // Removendo da lista o item movido.
-          // let choosedItem = self.myArray.splice(evt.oldIndex, 1)
-          // // Colocando na lista o item movido, na sua nova posição.
-          // self.myArray.splice(evt.newIndex, 0, choosedItem[0])
+          let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
+          // Removendo da lista o item movido.
+          let choosedItem = tempCurrentSequence.splice(evt.oldIndex, 1)
+          // Colocando na lista o item movido, na sua nova posição.
+          tempCurrentSequence.splice(evt.newIndex, 0, choosedItem[0])
+
+          self.localCurrentSequence = tempCurrentSequence
         }
       })
     },
@@ -171,8 +196,8 @@ export default {
       )
     },
     showList () {
-      for (let item of this.myArray) {
-        console.log(item.name)
+      for (let item of this.localCurrentSequence) {
+        console.log(item)
       }
     }
   }
@@ -215,5 +240,16 @@ export default {
   border: 2px solic purple;
   width: 100%;
   height: 100%;
+  text-align: start;
+  .sequence-block {
+    display: inline-block;
+    width: 20%;
+    max-width: 200px;
+    max-height: 100px;
+    padding: 10px;
+    margin: 5px;
+    background-color: plum;
+  }
+
 }
 </style>
