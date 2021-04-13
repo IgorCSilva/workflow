@@ -9,6 +9,7 @@
 
     //- button(@click="addItem") Add item
     button(@click="showList") Show List
+    button(@click="validateSequence('oi')") Validate Sequence
 
     .home
       img(alt="Vue logo", src="../assets/logo.png")
@@ -37,16 +38,18 @@
               .function-box(
                 v-for="functionBlock in moduleBlock.functions"
                 :key="functionBlock.id"
-                :id="functionBlock.id"
+                :id="JSON.stringify(functionBlock)"
               )
                 p {{ functionBlock.label }} / {{ functionBlock.arity}}
+                .description-box
+                  p {{ functionBlock.description }}
 
         .col-xs-8
           #sequence-area.sequence-area-box
-            .sequence-block(
-              v-for="sequenceBlock in localCurrentSequence"
-              :key="sequenceBlock.id + sequenceBlock.position"
-            ) {{ sequenceBlock.id}}
+            //- .sequence-block(
+            //-   v-for="sequenceBlock in localCurrentSequence"
+            //-   :key="sequenceBlock.id + sequenceBlock.position"
+            //- ) {{ sequenceBlock.id}}
         .col-xs-2
           //- .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
           //-   p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
@@ -61,6 +64,10 @@
 
 import { eventBus } from '@/main.ts'
 import { mapState, mapGetters, mapActions } from 'vuex'
+import Sortable from '@/sortable/sortable.js'
+
+// Mixins.
+import Notifications from '@/core/compatibility/Notifications.js'
 
 export default {
   name: 'VueDraggableNext',
@@ -70,6 +77,7 @@ export default {
   beforeDestroy () {
     eventBus.$off('create-sortables', this.createSortables)
   },
+  mixins: [Notifications],
   data () {
     return {
       functionIdPrefix: 'function-box',
@@ -78,6 +86,7 @@ export default {
   },
   computed: {
     ...mapState({
+      modulesFunctions: state => state.workflow.modulesFunctions,
       sequences: state => state.workflow.sequences,
       currentSequence: state => state.workflow.currentSequence
     }),
@@ -145,11 +154,13 @@ export default {
 
           let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
 
+          // console.log('function by id: ', this.getFunctionById(evt.item.id))
+
           tempCurrentSequence.splice(
             evt.newDraggableIndex,
             0,
             {
-              id: evt.item.id,
+              ...(JSON.parse(evt.item.id)),
               position: 0
             }
           )
@@ -161,7 +172,7 @@ export default {
           self.localCurrentSequence = tempCurrentSequence
 
           // Removendo item para que não influencie na definição das posições dos elementos.
-          evt.item.remove()
+          // evt.item.remove()
         },
         onEnd: function (/**Event*/evt) {
           console.log('ON END')
@@ -175,6 +186,7 @@ export default {
           // evt.clone // the clone element
           // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
 
+          // document.getElementsByClassName('sequence-')
           console.log('De ' + evt.oldIndex + ' para ' + evt.newIndex)
           
           let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
@@ -199,6 +211,60 @@ export default {
       for (let item of this.localCurrentSequence) {
         console.log(item)
       }
+    },
+    validateSequence (action) {
+      console.log('ACTION: ', action)
+      let validSequence = false
+
+      let sequenceFunctions = this.localCurrentSequence
+      
+      if (sequenceFunctions.length == 0) {
+        console.log('A sequência está vazia.')
+      } else if (sequenceFunctions.length == 1) {
+        validSequence = true
+      } else {
+        let parsedArgument = null
+        let matchResponseArgument = false
+        let someNoMatch = false
+
+        for (let i = 1; i < sequenceFunctions.length; i++) {
+          console.log(sequenceFunctions[i - 1].responsesType, sequenceFunctions[i].argumentsType, (sequenceFunctions[i].argumentsType).length == 0)
+
+          if (sequenceFunctions[i - 1].responsesType.length == 0 ||
+              (sequenceFunctions[i].argumentsType).length == 0) {
+
+            matchResponseArgument = true
+          } else {
+            matchResponseArgument = sequenceFunctions[i - 1].responsesType[0] == (sequenceFunctions[i].argumentsType)[0]
+
+            if (!matchResponseArgument) {
+              try {
+                parsedArgument = (sequenceFunctions[i].argumentsType)[0].replaceAll(' ', '').split(',')
+                matchResponseArgument = parsedArgument.includes(sequenceFunctions[i - 1].responsesType[0])
+              } catch (error) {
+                matchResponseArgument = false
+                console.log(error)
+              }
+            }
+          }
+           
+          console.log(matchResponseArgument)
+          if (!matchResponseArgument) {
+            someNoMatch = true
+          }
+        }
+
+        validSequence = !someNoMatch
+      }
+
+      if (!validSequence) {
+        this.notifInvalidSequence()
+      } else {
+        this.notifValidSequence()
+        if (action == 'update') {
+          // this.updateCurrentSequence()
+        }
+      }
     }
   }
 }
@@ -206,6 +272,10 @@ export default {
 
 
 <style lang="scss" scoped>
+.vue-draggable {
+  // max-height: 100vh;
+  padding-bottom: 40px;
+}
 .sequence-button {
   cursor: pointer;
   border: 2px dotted skyblue;
@@ -228,28 +298,52 @@ export default {
   margin-left: 10px;
 }
 
-.function-box {
-  cursor: pointer;
-  border: 2px dotted skyblue;
-  border-radius: 15px;
-  margin: 5px 0;
-  padding: 5px;
+.list-function-box {
+  .function-box {
+    cursor: pointer;
+    border: 2px dotted skyblue;
+    border-radius: 15px;
+    margin: 5px 0;
+    padding: 5px;
+
+    .description-box {
+      display: none;
+    }
+  }
 }
 .sequence-area-box {
-  background-color: papayawhip;
-  border: 2px solic purple;
+  background-color: #ddf;
+  border: 2px solid purple;
   width: 100%;
   height: 100%;
   text-align: start;
-  .sequence-block {
+
+  .function-box {
+    cursor: move;
     display: inline-block;
-    width: 20%;
+    width: calc(20% - 30px);
     max-width: 200px;
-    max-height: 100px;
+    height: 100px;
+    overflow-y: scroll;
     padding: 10px;
     margin: 5px;
-    background-color: plum;
+    border-radius: 6px;
+    background-color: #fff;
   }
+
+  .function-box::-webkit-scrollbar {
+    display: none;
+  }
+
+  // .sequence-block {
+  //   display: inline-block;
+  //   width: 20%;
+  //   max-width: 200px;
+  //   max-height: 100px;
+  //   padding: 10px;
+  //   margin: 5px;
+  //   background-color: plum;
+  // }
 
 }
 </style>

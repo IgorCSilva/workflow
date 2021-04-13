@@ -45,3 +45,8 @@ export default {
 </script>
 
 <style lang="scss" src="@/css/main.scss"></style>
+<style lang="scss" scoped>
+.default-layout {
+  // max-height: 100vh;
+}
+</style>

@@ -14,7 +14,7 @@ const routes: Array<RouteConfig> = [
     component: Home
   },
   {
-    path: '/vue-draggable-next',
+    path: '/new-version',
     name: 'vue-draggable-next',
     component: VueDraggableNext
   },
