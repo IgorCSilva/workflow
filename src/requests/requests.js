@@ -105,9 +105,9 @@ export const setSequence = async function (sequence) {
   return response
 }
 
-export const updateSequence = async function (sequence, sequence_id) {
+export const updateSequence = async function (sequence) {
   let response = null
-  let route = `http://localhost:4000/api/sequence/update/${sequence_id}`
+  let route = `http://localhost:4000/api/sequence/update/${sequence.id}`
 
   response = await req('put', null, route, sequence)
 

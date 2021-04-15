@@ -8,8 +8,10 @@
 
 
     //- button(@click="addItem") Add item
-    button(@click="showList") Show List
+    button.m10(@click="showList") Show List
     button(@click="validateSequence('oi')") Validate Sequence
+    button(@click="saveCurrentSequence") Set sequence
+
 
     .home
       img(alt="Vue logo", src="../assets/logo.png")
@@ -18,14 +20,19 @@
       .create-sequence
         h3 Cria uma sequência
         
-        //- input(v-model="newSequenceName" placeholder="Nome da sequência")
-        //- button(@click="createNewSequence()") Criar
+        input(v-model="newSequenceName" placeholder="Nome da sequência")
+        button(@click="createNewSequence()") Criar
 
       .sequences-buttons
         h4 Lista de sequências existentes
         
-        //- .sequence-button(v-for="(sequence, index) in sequences" :key="sequence + index" @click="selectSequence(sequence)")
-        //-   span {{ sequence.name }}
+        .sequence-button(
+          v-for="(sequence, index) in sequences"
+          :key="sequence + index"
+          @click="selectSequence(sequence)"
+          :style="{border: sequence.name == currentSequence.name ? '2px solid red' : ''}"
+        )
+          span {{ sequence.name }}
 
       .row
         #module-box.col-xs-2
@@ -51,8 +58,9 @@
             //-   :key="sequenceBlock.id + sequenceBlock.position"
             //- ) {{ sequenceBlock.id}}
         .col-xs-2
-          //- .arguments-box(v-for="(sequenceBlocks, index) in listSequenceBlocks")
-          //-   p {{ sequenceBlocks.module }} {{ sequenceBlocks.function }}
+          //- p {{ currentSequence }}
+          h4 Lixeira
+          #trash-area
 
       //- button(v-if="currentSequence.id" @click="validateSequence('update')") Update sequence
       //- button(v-else @click="validateSequence('create')") Create sequence
@@ -69,6 +77,12 @@ import Sortable from '@/sortable/sortable.js'
 // Mixins.
 import Notifications from '@/core/compatibility/Notifications.js'
 
+// Functions.
+import { 
+  setSequence,
+  updateSequence
+} from '@/requests/requests'
+
 export default {
   name: 'VueDraggableNext',
   beforeMount () {
@@ -81,6 +95,7 @@ export default {
   data () {
     return {
       functionIdPrefix: 'function-box',
+      newSequenceName: '',
       localCurrentSequence: []
     }
   },
@@ -95,8 +110,12 @@ export default {
     })
   },
   methods: {
+    ...mapActions({
+      setCurrentSequence: 'workflow/setCurrentSequence'
+    }),
     createSortables () {
       let sequenceArea = document.getElementById('sequence-area')
+      let trashArea = document.getElementById('trash-area')
       let self = this
       
       // Criando Sortables para os blocos das funções.
@@ -165,9 +184,9 @@ export default {
             }
           )
 
-          for (let i = 0; i < tempCurrentSequence.length; i++) {
-            tempCurrentSequence[i].position = i
-          }
+          // for (let i = 0; i < tempCurrentSequence.length; i++) {
+          //   tempCurrentSequence[i].position = i
+          // }
 
           self.localCurrentSequence = tempCurrentSequence
 
@@ -198,26 +217,164 @@ export default {
           self.localCurrentSequence = tempCurrentSequence
         }
       })
-    },
-    addItem () {
-      this.myArray.push(
-        {
-          id: this.myArray.length + 1,
-          name: 'igor' + this.myArray.length
+
+      // Criando Sortable da lixeira.
+      Sortable.create(trashArea, {
+        group: 'mount-sequence',
+        animation: 600,
+        ghostClass: 'sequence-block',
+        onAdd: function (/**Event*/evt) {
+          console.log('ON ADD')
+          // var itemEl = evt.item;  // dragged HTMLElement
+          // evt.to;    // target list
+          // evt.from;  // previous list
+          // evt.oldIndex;  // element's old index within old parent
+          // evt.newIndex;  // element's new index within new parent
+          // evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
+          // evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
+          // evt.clone // the clone element
+          // evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
+
+          // console.log(evt)
+          
+          console.log('Function id: ', evt.item, evt.oldDraggableIndex)
+
+          let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
+
+          // Tive que colocar esta parte porque estava aparecendo null quando se removia as funções.
+          tempCurrentSequence = tempCurrentSequence.filter(el => {
+            return el
+          })
+          
+          console.log(tempCurrentSequence)
+          // // console.log('function by id: ', this.getFunctionById(evt.item.id))
+
+          // if (tempCurrentSequence.length > 1) {
+            tempCurrentSequence.splice(
+              evt.oldDraggableIndex,
+              1
+            )
+            console.log('ti', tempCurrentSequence)
+
+          // } else {
+          //   tempCurrentSequence = []
+          //   console.log('t', tempCurrentSequence)
+          // }
+
+          // for (let i = 0; i < tempCurrentSequence.length; i++) {
+          //   tempCurrentSequence[i].position = i
+          // }
+
+          self.localCurrentSequence = tempCurrentSequence
+          console.log(self.localCurrentSequence)
+          // Removendo item para que não influencie na definição das posições dos elementos.
+          evt.item.remove()
         }
-      )
+      })
+    },
+    createNewSequence() {
+      console.log(this.newSequenceName, this.sequences)
+      let sequence = this.sequences.find(s => {
+        return s.name === this.newSequenceName
+      })
+
+      if (sequence == undefined) {
+        this.sequences.push({
+          description: '',
+          name: this.newSequenceName,
+          functions_sequence: []
+        })
+      }
+
+      this.setCurrentSequence({
+        name: this.newSequenceName,
+        description: '',
+        functions_sequence: this.localCurrentSequence.map(f => {return f.id})
+      })
+    },
+    availableFunctions() {
+      let functions = []
+
+      for (let moduleBlock of this.modulesFunctions) {
+        functions = functions.concat(moduleBlock.functions)
+      }
+
+      return functions
+    },
+    selectSequence(sequence) {
+      console.log(sequence, this.modulesFunctions)
+      this.setCurrentSequence(sequence)
+      
+      // Montando sequência de funções.
+      let objFunctionsSequence = sequence.functions_sequence.map(fid => {
+        return (this.availableFunctions()).find(f => {
+          return f.id == fid
+        })
+      })
+
+      // Setando a sequência de funções de acordo com a sequência selecionada.
+      this.localCurrentSequence = objFunctionsSequence
+      console.log('Sequencia de funções: ', objFunctionsSequence)
+
+      let fb = null
+      let desc = null
+      let el_p = null
+      let t = null
+
+      // Componente da área de sequências.
+      let sequenceArea = document.getElementById('sequence-area')
+      // Removendo todos os componentes que estão na área de sequência.
+      while (sequenceArea.firstChild) {
+        sequenceArea.removeChild(sequenceArea.firstChild)
+      }
+
+      for(let func of objFunctionsSequence) {
+        console.log(func.label)
+
+        // Criando function box.
+        fb = document.createElement('div')
+        fb.classList.add('function-box')
+        // Criando description.
+        desc = document.createElement('div')
+        desc.classList.add('description-box')
+
+        t = document.createTextNode(func.description)
+        el_p = document.createElement('p')
+        el_p.appendChild(t)
+        desc.appendChild(el_p)
+
+
+        fb.appendChild(desc)
+        fb.style['-webkit-scrollbar'] = 'display: none;'
+        fb.style.cssText = `cursor: move;
+          display: inline-block;
+          width: calc(20% - 30px);
+          max-width: 200px;
+          height: 120px;
+          overflow-y: scroll;
+          padding: 10px;
+          margin: 5px;
+          border-radius: 6px;
+          background-color: #fff;
+        `
+        // Adicionando componente na área de sequência.
+        sequenceArea.appendChild(fb)
+      }
+
     },
     showList () {
-      for (let item of this.localCurrentSequence) {
+      for (let item of this.localCurrentSequence.filter(el => {
+        return el
+      })) {
         console.log(item)
       }
     },
-    validateSequence (action) {
-      console.log('ACTION: ', action)
+    validateSequence (cleanedSeq) {
       let validSequence = false
 
-      let sequenceFunctions = this.localCurrentSequence
-      
+      // Tive que colocar esta parte pq estava aparecendo undefined quando removia as funções da lista.
+      let sequenceFunctions = cleanedSeq
+      console.log(sequenceFunctions)
       if (sequenceFunctions.length == 0) {
         console.log('A sequência está vazia.')
       } else if (sequenceFunctions.length == 1) {
@@ -259,12 +416,51 @@ export default {
 
       if (!validSequence) {
         this.notifInvalidSequence()
+        return false
       } else {
         this.notifValidSequence()
-        if (action == 'update') {
-          // this.updateCurrentSequence()
+        return true
+      }
+    },
+    saveCurrentSequence() {
+
+      let cleanedSeq = this.cleanLocalCurrentSequence()
+      let isValidSequence = this.validateSequence(cleanedSeq)
+      if (isValidSequence) {
+        
+        let currSequence = this.currentSequence
+        console.log('SAVE', this.localCurrentSequence)
+        currSequence.functions_sequence = cleanedSeq.map(f => {
+          return f.id
+        })
+
+        console.log(currSequence)
+        
+        if (currSequence.id) {
+          console.log('UPDATE SEQUENCE')
+          updateSequence(currSequence)
+            .then(resp => {
+              console.log(resp)
+            })
+            .catch(error => {
+              console.error(error)
+            })
+        } else {
+          console.log('CREATE SEQUENCE')
+          setSequence(currSequence)
+            .then(resp => {
+              console.log(resp)
+            })
+            .catch(error => {
+              console.error(error)
+            })
         }
       }
+    },
+    cleanLocalCurrentSequence() {
+      return this.localCurrentSequence.filter(el => {
+        return el
+      })
     }
   }
 }
@@ -334,16 +530,11 @@ export default {
   .function-box::-webkit-scrollbar {
     display: none;
   }
+}
 
-  // .sequence-block {
-  //   display: inline-block;
-  //   width: 20%;
-  //   max-width: 200px;
-  //   max-height: 100px;
-  //   padding: 10px;
-  //   margin: 5px;
-  //   background-color: plum;
-  // }
-
+#trash-area {
+  width: 100%;
+  height: 300px;
+  border: 2px dashed #faa;
 }
 </style>
