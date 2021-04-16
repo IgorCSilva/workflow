@@ -9,13 +9,13 @@ const VueDraggableNext = () => import('../pages/VueDraggableNext.vue')
 
 const routes: Array<RouteConfig> = [
   {
-    path: '/',
+    path: '/home',
     name: 'Home',
     component: Home
   },
   {
-    path: '/new-version',
-    name: 'vue-draggable-next',
+    path: '/',
+    name: 'manage-sequence',
     component: VueDraggableNext
   },
   {

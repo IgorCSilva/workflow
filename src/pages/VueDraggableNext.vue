@@ -173,8 +173,13 @@ export default {
 
           let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
 
-          // console.log('function by id: ', this.getFunctionById(evt.item.id))
+          // Tive que colocar esta parte porque estava aparecendo null quando se adicionava as funções.
+          tempCurrentSequence = tempCurrentSequence.filter(el => {
+            return el
+          })
 
+          // console.log('function by id: ', this.getFunctionById(evt.item.id))
+          console.log(tempCurrentSequence)
           tempCurrentSequence.splice(
             evt.newDraggableIndex,
             0,
@@ -272,6 +277,12 @@ export default {
         }
       })
     },
+    removeAllChildren (comp) {
+      // Removendo todos os componentes que estão na área de sequência.
+      while (comp.firstChild) {
+        comp.removeChild(comp.firstChild)
+      }
+    },
     createNewSequence() {
       console.log(this.newSequenceName, this.sequences)
       let sequence = this.sequences.find(s => {
@@ -284,6 +295,12 @@ export default {
           name: this.newSequenceName,
           functions_sequence: []
         })
+
+        this.localCurrentSequence = []
+        // Componente da área de sequências.
+        let sequenceArea = document.getElementById('sequence-area')
+        // Removendo todos os componentes da área de sequência.
+        this.removeAllChildren(sequenceArea)
       }
 
       this.setCurrentSequence({
@@ -323,10 +340,8 @@ export default {
 
       // Componente da área de sequências.
       let sequenceArea = document.getElementById('sequence-area')
-      // Removendo todos os componentes que estão na área de sequência.
-      while (sequenceArea.firstChild) {
-        sequenceArea.removeChild(sequenceArea.firstChild)
-      }
+      // Removendo todos os componentes da área de sequência.
+      this.removeAllChildren(sequenceArea)
 
       for(let func of objFunctionsSequence) {
         console.log(func.label)
@@ -366,7 +381,7 @@ export default {
       for (let item of this.localCurrentSequence.filter(el => {
         return el
       })) {
-        console.log(item)
+        console.log(item.label)
       }
     },
     validateSequence (cleanedSeq) {
@@ -374,7 +389,7 @@ export default {
 
       // Tive que colocar esta parte pq estava aparecendo undefined quando removia as funções da lista.
       let sequenceFunctions = cleanedSeq
-      console.log(sequenceFunctions)
+      
       if (sequenceFunctions.length == 0) {
         console.log('A sequência está vazia.')
       } else if (sequenceFunctions.length == 1) {
@@ -385,7 +400,7 @@ export default {
         let someNoMatch = false
 
         for (let i = 1; i < sequenceFunctions.length; i++) {
-          console.log(sequenceFunctions[i - 1].responsesType, sequenceFunctions[i].argumentsType, (sequenceFunctions[i].argumentsType).length == 0)
+          // console.log(sequenceFunctions[i - 1].responsesType, sequenceFunctions[i].argumentsType, (sequenceFunctions[i].argumentsType).length == 0)
 
           if (sequenceFunctions[i - 1].responsesType.length == 0 ||
               (sequenceFunctions[i].argumentsType).length == 0) {
