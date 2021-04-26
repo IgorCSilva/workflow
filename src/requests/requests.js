@@ -114,6 +114,15 @@ export const updateSequence = async function (sequence) {
   return response
 }
 
+export const registerClient = async function (clientData) {
+  let response = null
+  let route = `http://localhost:4000/api/register-client`
+
+  response = await req('post', null, route, clientData)
+
+  return response
+}
+
 // ============================================== //
 // -------------- REQUESTS GERAIS --------------- //
 // ============================================== //

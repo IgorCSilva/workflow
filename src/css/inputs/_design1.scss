@@ -1,0 +1,54 @@
+
+.design1-input {
+  .input-label {
+    margin: 20px 0 10px 20px;
+    line-height: 23px;
+    font-size: 1em;
+    font-weight: 500;
+  }
+  .full-box-input {
+    width: 100%;
+  }
+  .input-box-input {
+    background-color: #f1f4fe;
+    margin-bottom: 5px;
+    border-radius: 26px;
+    height: 45px;
+    border: 2px solid #d7deea;
+    overflow-x: hidden;
+
+    &.comp-in-focus {
+      border: 2px solid #ffc300;
+      border-radius: 26px;
+    }
+  }
+  textarea:focus, input:focus{
+      outline: none;
+  }
+  input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px #f1f4fe inset;
+  }
+  .comp-input {
+    background-color: transparent;
+    border: 0px;
+    border-radius: 26px;
+    height: 100%;
+    // left: 20px;
+    letter-spacing: 0.00px;
+    line-height: 20px;
+    padding: 0 2px;
+    // position: relative;
+    resize: none;
+    text-align: left;
+    // top: 10px;
+    margin-left: 10px;
+    width: calc(100% - 20px);
+    font-size: 1em;
+    overflow: hidden;
+  }
+  .comp-input::placeholder {
+    color: #a0acbb;
+    font-size: 1em;
+    font-weight: 500;
+  }
+}

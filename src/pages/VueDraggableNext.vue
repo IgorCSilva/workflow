@@ -214,10 +214,17 @@ export default {
           console.log('De ' + evt.oldIndex + ' para ' + evt.newIndex)
           
           let tempCurrentSequence = JSON.parse(JSON.stringify(self.localCurrentSequence))
+
+          console.log('temp sequence: ', tempCurrentSequence)
           // Removendo da lista o item movido.
           let choosedItem = tempCurrentSequence.splice(evt.oldIndex, 1)
-          // Colocando na lista o item movido, na sua nova posição.
-          tempCurrentSequence.splice(evt.newIndex, 0, choosedItem[0])
+
+          console.log('to list: ', evt.to.id)
+          // Se o bloco for movido para a própria área de sequência recolocar ele na lista.
+          if (evt.to.id == 'sequence-area') {
+            // Colocando na lista o item movido, na sua nova posição.
+            tempCurrentSequence.splice(evt.newIndex, 0, choosedItem[0])
+          }
 
           self.localCurrentSequence = tempCurrentSequence
         }
@@ -251,14 +258,14 @@ export default {
             return el
           })
           
-          console.log(tempCurrentSequence)
+          console.log('trash: ', tempCurrentSequence)
           // // console.log('function by id: ', this.getFunctionById(evt.item.id))
 
           // if (tempCurrentSequence.length > 1) {
-            tempCurrentSequence.splice(
-              evt.oldDraggableIndex,
-              1
-            )
+            // tempCurrentSequence.splice(
+            //   evt.oldDraggableIndex,
+            //   1
+            // )
             console.log('ti', tempCurrentSequence)
 
           // } else {
@@ -440,6 +447,7 @@ export default {
     saveCurrentSequence() {
 
       let cleanedSeq = this.cleanLocalCurrentSequence()
+      console.log('cleaned sequence: ', cleanedSeq)
       let isValidSequence = this.validateSequence(cleanedSeq)
       if (isValidSequence) {
         

@@ -1,6 +1,6 @@
 <template lang="pug">
   .default-layout
-    comp-header
+    //- comp-header
     //- store
     //- page-modal
     //- pug
