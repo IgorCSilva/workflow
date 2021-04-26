@@ -1,5 +1,9 @@
 <template lang="pug">
   #sign-up
+    //- Modais
+    ThankYouModal
+    GuideModal
+
     .sign-up-header
       h3 Sign Up Header
 
@@ -60,6 +64,12 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
+// Components.
+import ThankYouModal from '@/components/Modal/ThankYouModal.vue'
+import GuideModal from '@/components/Modal/GuideModal.vue'
+
 // Mixins.
 import InputMask from '@/inputMasks/maskInput.js'
 
@@ -81,7 +91,19 @@ export default {
     }
   },
   mixins: [InputMask],
+  components: {
+    ThankYouModal,
+    GuideModal
+  },
   methods: {
+    ...mapActions({
+      showModal: 'global/showModal',
+      // hideModal: 'global/hideModal',
+    }),
+    // showAllModals() {
+    //   this.showModal('first')
+    //   this.showModal('second')
+    // }
     finishRegister() {
       console.log('Client data: ', this.signUp)
 
@@ -89,12 +111,19 @@ export default {
       registerClient(this.signUp)
         .then(resp => {
           console.log(resp)
-          // if (resp && resp.status == 200) {
-          //   console.log('sequences: ', resp.data)
-          //   this.setSequences(resp.data.data)
+          if (resp && resp.status == 200 && resp.data && resp.data.data) {
+            let result = resp.data.data
+            // Efetuar redirecionamentos de página.
+            if (result.result && result.result.redirect_to) {
+              this.$router.push({name: result.result.redirect_to})
 
-          //   eventBus.$emit('create-sortables')
-          // }
+            } else if(result.result && result.result.redirect_directly_to) {
+              window.open(result.result.redirect_directly_to, '_blank')
+
+            } else if(result.result && result.result.show_modal) {
+              this.showModal(result.result.show_modal)
+            }
+          }
         })
         .catch(error => {
           console.error(error)

@@ -7,6 +7,7 @@ Vue.use(VueRouter)
 const Show = () => import('@/pages/Show.vue')
 const VueDraggableNext = () => import('../pages/VueDraggableNext.vue')
 const SignUp = () => import('../pages/SignUp.vue')
+const ThankYouPage = () => import('../pages/ThankYouPage.vue')
 
 const routes: Array<RouteConfig> = [
   {
@@ -23,6 +24,11 @@ const routes: Array<RouteConfig> = [
     path: '/sign-up',
     name: 'sign-up',
     component: SignUp
+  },
+  {
+    path: '/thank-you-page',
+    name: 'thank_you_page',
+    component: ThankYouPage
   },
   {
     path: '/about',
