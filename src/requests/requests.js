@@ -78,7 +78,44 @@ export const getModules = async function () {
   return response
 }
 
+
 export const getFunctions = async function () {
+  let response = null
+  let route = `http://localhost:4000/api/modules-functions`
+  
+  response = await req('get', null, route, {})
+  
+  return response
+}
+
+export const getSequences = async function () {
+  let response = null
+  let route = `http://localhost:4000/api/sequence/list`
+  
+  response = await req('get', null, route, {})
+  
+  return response
+}
+
+export const setSequence = async function (sequence) {
+  let response = null
+  let route = `http://localhost:4000/api/sequence/create`
+  
+  response = await req('post', null, route, sequence)
+  
+  return response
+}
+
+export const updateSequence = async function (sequence) {
+  let response = null
+  let route = `http://localhost:4000/api/sequence/update/${sequence.id}`
+  
+  response = await req('put', null, route, sequence)
+  
+  return response
+}
+
+export const getProjectModules = async function () {
   let response = null
   let route = `http://localhost:4000/api/modules-functions`
 
@@ -87,39 +124,12 @@ export const getFunctions = async function () {
   return response
 }
 
-export const getSequences = async function () {
-  let response = null
-  let route = `http://localhost:4000/api/sequence/list`
-
-  response = await req('get', null, route, {})
-
-  return response
-}
-
-export const setSequence = async function (sequence) {
-  let response = null
-  let route = `http://localhost:4000/api/sequence/create`
-
-  response = await req('post', null, route, sequence)
-
-  return response
-}
-
-export const updateSequence = async function (sequence) {
-  let response = null
-  let route = `http://localhost:4000/api/sequence/update/${sequence.id}`
-
-  response = await req('put', null, route, sequence)
-
-  return response
-}
-
 export const registerClient = async function (clientData) {
   let response = null
   let route = `http://localhost:4000/api/register-client`
-
+  
   response = await req('post', null, route, clientData)
-
+  
   return response
 }
 

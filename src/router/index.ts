@@ -6,6 +6,7 @@ Vue.use(VueRouter)
 
 const Show = () => import('@/pages/Show.vue')
 const VueDraggableNext = () => import('../pages/VueDraggableNext.vue')
+const RegisterFunctions = () => import('../pages/RegisterFunctions.vue')
 const SignUp = () => import('../pages/SignUp.vue')
 const ThankYouPage = () => import('../pages/ThankYouPage.vue')
 
@@ -19,6 +20,11 @@ const routes: Array<RouteConfig> = [
     path: '/',
     name: 'manage-sequence',
     component: VueDraggableNext
+  },
+  {
+    path: '/register-functions',
+    name: 'register-functions',
+    component: RegisterFunctions
   },
   {
     path: '/sign-up',
