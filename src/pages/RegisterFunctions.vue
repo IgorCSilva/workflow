@@ -25,7 +25,6 @@
               id="module-title"
               class="comp-input"
               name="module-title"
-              maxlength="18"
               placeholder="Enviar mensagens"
               type="text"
               v-model.trim="moduleTitle"
@@ -40,55 +39,79 @@
               id="module-desc"
               class="comp-input"
               name="module-desc"
-              maxlength="18"
               placeholder="Enviar mensagens"
               type="text"
               v-model.trim="moduleDescription"
             )
 
-      .select-functions(v-if="currentModule.functions")
-        .input-label.blue-label Selecione a função
-        .modules-box
-          .chevron-icon-installment
-            img(src="@/assets/arrow.png" alt="module arrow")
+      .function-box(v-if="currentModule.functions")
+        .select-functions
+          .input-label.blue-label Selecione a função
+          .modules-box
+            .chevron-icon-installment
+              img(src="@/assets/arrow.png" alt="module arrow")
 
-          select(name="functions" id="function" @change="selectFunction($event)")
-            option(:value="'{}'") função ...
-            option(v-for="func in currentModule.functions" :key="`${func.arity}${func.name}`" :value="JSON.stringify(func)") {{ func.name }}
+            select(name="functions" id="function" @change="selectFunction($event)")
+              option(:value="'{}'") função ...
+              option(v-for="func in currentModule.functions" :key="`${func.arity}${func.name}`" :value="JSON.stringify(func)") {{ func.name }}
 
-      p {{ currentFunction }}
+        p {{ currentFunction }}
 
-      .design1-input
-        .input-label Título da função:
-        .full-box-input
-          .input-box-input
-            input(
-              id="function-title"
-              class="comp-input"
-              name="function-title"
-              maxlength="18"
-              placeholder="Envia mensagem para whatsapp"
-              type="text"
-              v-model.trim="functionTitle"
-            )
+        .design1-input
+          .input-label Título da função:
+          .full-box-input
+            .input-box-input
+              input(
+                id="function-title"
+                class="comp-input"
+                name="function-title"
+                placeholder="Envia mensagem para whatsapp"
+                type="text"
+                v-model.trim="functionTitle"
+              )
 
-      
-      .design1-input
-        .input-label Descrição da função:
-        .full-box-input
-          .input-box-input
-            input(
-              id="function-desc"
-              class="comp-input"
-              name="function-desc"
-              maxlength="18"
-              placeholder="Enviar mensagens de boas vindas"
-              type="text"
-              v-model.trim="functionDescription"
-            )
+        
+        .design1-input
+          .input-label Descrição da função:
+          .full-box-input
+            .input-box-input
+              input(
+                id="function-desc"
+                class="comp-input"
+                name="function-desc"
+                placeholder="Enviar mensagens de boas vindas"
+                type="text"
+                v-model.trim="functionDescription"
+              )
 
-      .button-register(@click="finishRegister")
-        p Finalizar
+        .design1-input
+          .input-label Tipos dos argumentos de entrada:
+          .full-box-input
+            .input-box-input
+              input(
+                id="function-args-types"
+                class="comp-input"
+                name="function-args-types"
+                placeholder="string, number | boolean"
+                type="text"
+                v-model.trim="argumentsType"
+              )
+
+        .design1-input
+          .input-label Tipo do argumento de saída:
+          .full-box-input
+            .input-box-input
+              input(
+                id="function-resp-type"
+                class="comp-input"
+                name="function-resp-type"
+                placeholder="string"
+                type="text"
+                v-model.trim="responsesType"
+              )
+
+        .button-register(@click="finishRegister")
+          p Finalizar
 
       //- .list-modules(v-for="mf in modulesFunctions" :key="mf.id")
       //-   p Módulo: {{ mf.module }}
@@ -110,7 +133,9 @@
 import { mapState } from 'vuex'
 
 import { 
-  getProjectModules
+  getProjectModules,
+  registerFunction,
+  registerModule
 } from '@/requests/requests'
 
 
@@ -123,10 +148,13 @@ export default {
       currentFunction: {},
       titleRegister: '',
       moduleExist: false,
+      functionExist: false,
       moduleTitle: '',
       moduleDescription: '',
       functionTitle: '',
-      functionDescription: ''
+      functionDescription: '',
+      argumentsType: '',
+      responsesType: ''
     }
   },
   computed: {
@@ -151,6 +179,53 @@ export default {
   methods: {
     finishRegister() {
       console.log(this.$data)
+
+      if (!this.moduleExist) {
+        let registerFunctionData = {
+          function: this.currentFunction.name, 
+          label: this.functionTitle,
+          description: this.functionDescription,
+          arity: this.currentFunction.arity,
+          argumentsType: this.argumentsType ? this.argumentsType.split(',').map(arg => {
+            return arg.replaceAll('|', ',').replaceAll(' ', '')
+          }) : [],
+          responsesType: this.responsesType ? [this.responsesType.replaceAll('|', ',').replaceAll(' ', '')] : []
+        }
+
+        console.log('Function data: ', registerFunctionData)
+        // Buscando módulos disponíveis para manipulação.
+        registerFunction(registerFunctionData)
+          .then(resp => {
+            console.log(resp)
+            if (resp && resp.status == 200) {
+              let functionId = resp.data.data.id
+
+              let registerModuleData = {
+                module: this.currentModule.module.replace('Elixir.', ''),
+                label: this.moduleTitle,
+                description: this.moduleDescription,
+                module_functions: [functionId]
+              }
+
+              // Buscando módulos disponíveis para manipulação.
+              registerModule(registerModuleData)
+                .then(resp => {
+                  console.log(resp)
+                  if (resp && resp.status == 200) {
+                    
+                  }
+                })
+                .catch(error => {
+                  console.error(error)
+                })
+            }
+          })
+          .catch(error => {
+            console.error(error)
+          })
+      } else { // Caso o módulo selecionado já esteja registrado.
+
+      }
     },
     selectModule(event) {
       let selmodule = JSON.parse(event.target.value)
@@ -176,6 +251,37 @@ export default {
       let selfunction = JSON.parse(event.target.value)
       this.currentFunction = selfunction
       console.log('Selected function: ', selfunction)
+
+      let getModule = this.modulesFunctions.find(mf => {
+        return mf.module == this.currentModule.module.replace('Elixir.', '')
+      })
+
+      console.log(getModule)
+
+      let alredyRegistered = getModule.functions.find(f => {
+        return f.arity == selfunction.arity && f.function == selfunction.name
+      })
+
+      console.log(alredyRegistered)
+
+    console.log('Modules functions: ', this.modulesFunctions)
+
+
+      if (alredyRegistered) {
+        this.functionExist = true
+        this.functionTitle = alredyRegistered.label
+        this.functionDescription = alredyRegistered.description
+        this.argumentsType = (alredyRegistered.argumentsType.map(arg => {
+          return arg.replaceAll(',', '|')
+        })).join(','),
+        this.responsesType = (alredyRegistered.responsesType.map(arg => {
+          return arg.replaceAll(',', '|')
+        })).join(',')
+      } else {
+        this.functionExist = false
+        this.functionTitle = ''
+        this.functionDescription = ''
+      }
     }
   }
 }

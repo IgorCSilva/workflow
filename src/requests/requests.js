@@ -124,6 +124,24 @@ export const getProjectModules = async function () {
   return response
 }
 
+export const registerFunction = async function (functionData) {
+  let response = null
+  let route = `http://localhost:4000/api/function/create`
+  
+  response = await req('post', null, route, functionData)
+  
+  return response
+}
+
+export const registerModule = async function (moduleData) {
+  let response = null
+  let route = `http://localhost:4000/api/module/create`
+  
+  response = await req('post', null, route, moduleData)
+  
+  return response
+}
+
 export const registerClient = async function (clientData) {
   let response = null
   let route = `http://localhost:4000/api/register-client`
