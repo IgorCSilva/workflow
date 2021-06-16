@@ -17,7 +17,7 @@ const routes: Array<RouteConfig> = [
     component: Home
   },
   {
-    path: '/',
+    path: '/manage-sequence',
     name: 'manage-sequence',
     component: VueDraggableNext
   },
