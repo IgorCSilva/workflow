@@ -6,33 +6,37 @@
     //-     span.glyphicon-move  X 
     //-     span {{ item.name }}
 
-
-    //- button(@click="addItem") Add item
-    button.m10(@click="showList") Show List
-    button(@click="validateSequence('oi')") Validate Sequence
-    button(@click="saveCurrentSequence") Set sequence
-
-
     .home
-      img(alt="Vue logo", src="../assets/logo.png")
-      p Click me to say hello
 
-      .create-sequence
-        h3 Cria uma sequência
-        
-        input(v-model="newSequenceName" placeholder="Nome da sequência")
-        button(@click="createNewSequence()") Criar
+      .top-box.row.start-xs
+        .create-sequence.col-xs-6
+          h3 Criar uma sequência
+          
+          .design1-input
+            .full-box-input
+              .input-box-input
+                input(
+                  id="module-title"
+                  class="comp-input"
+                  name="module-title"
+                  placeholder="Nome da sequência"
+                  type="text"
+                  v-model.trim="newSequenceName"
+                )
+          //- input(v-model="newSequenceName" placeholder="Nome da sequência")
+          .create-sequence-button(@click="createNewSequence()")
+            span Criar
 
-      .sequences-buttons
-        h4 Lista de sequências existentes
-        
-        .sequence-button(
-          v-for="(sequence, index) in sequences"
-          :key="sequence + index"
-          @click="selectSequence(sequence)"
-          :style="{border: sequence.name == currentSequence.name ? '2px solid red' : ''}"
-        )
-          span {{ sequence.name }}
+        .sequences-buttons.col-xs-6
+          h3 Lista de sequências existentes
+          
+          .sequence-button(
+            v-for="(sequence, index) in sequences"
+            :key="sequence + index"
+            @click="selectSequence(sequence)"
+            :style="{border: sequence.name == currentSequence.name ? '2px solid purple' : ''}"
+          )
+            span {{ sequence.name }}
 
       .row
         #module-box.col-xs-2
@@ -47,7 +51,7 @@
                 :key="functionBlock.id"
                 :id="JSON.stringify(functionBlock)"
               )
-                p {{ functionBlock.label }} / {{ functionBlock.arity}}
+                p(:style="{fontWeight: 'bold'}") {{ functionBlock.label }}
                 .description-box
                   p {{ functionBlock.description }}
 
@@ -59,11 +63,14 @@
             //- ) {{ sequenceBlock.id}}
         .col-xs-2
           //- p {{ currentSequence }}
-          h4 Lixeira
+          h3 Lixeira
           #trash-area
+            img(src="@/assets/trash.png")
 
-      //- button(v-if="currentSequence.id" @click="validateSequence('update')") Update sequence
-      //- button(v-else @click="validateSequence('create')") Create sequence
+    //- button.m10(@click="showList") Show List
+    //- button(@click="validateSequence('oi')") Validate Sequence
+    .set-sequence-button(@click="saveCurrentSequence")
+      span Salvar sequência
 </template>
 
 
@@ -492,24 +499,73 @@ export default {
 
 <style lang="scss" scoped>
 .vue-draggable {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
   // max-height: 100vh;
-  padding-bottom: 40px;
+  padding: 40px 30px;
+  background-color: #ffffff;
 }
-.sequence-button {
-  cursor: pointer;
-  border: 2px dotted skyblue;
-  border-radius: 15px;
-  margin: 5px auto;
-  padding: 5px;
-  max-width: 200px;
+h1, h2, h3, h4, h5 {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  color: #444;
+}
+.top-box {
+  max-width: 1000px;
+  margin-left: 400px;
+  margin-bottom: 30px;
+  .create-sequence {
+    max-width: 1250px;
+    margin: 0 auto;
+
+    .create-sequence-button {
+      border-radius: 8px;
+      background-color: aliceblue;
+      margin-top: 20px;
+      padding: 10px 16px;
+      width: fit-content;
+      cursor: pointer;
+      
+      span {
+        font-weight: 600;
+        font-size: 1em;
+        color: #444;
+      }
+    }
+    .design1-input {
+      width: 300px;
+    }
+  }
+  .sequences-buttons {
+    max-width: 1250px;
+    margin: 0 auto;
+  
+    .sequence-button {
+      cursor: pointer;
+      border: 2px solid #eee;
+      border-radius: 18px;
+      margin-right: 10px;
+      margin-bottom: 20px;
+      padding: 7px 10px;
+      max-width: 200px;
+      display: inline-block;
+    }
+  }
+}
+#module-box {
+  height: 600px;
+  border-radius: 8px;
+  overflow-y: scroll;
+  border: 2px solid orange;
 }
 .module-box {
-  border: 2px solid orange;
+  // border: 2px solid orange;
   border-radius: 10px;
   margin: 10px 3px;
   padding: 5px;
 }
 .module-title {
+  border-bottom: 2px solid orange;
+  padding-bottom: 8px;
+  font-size: 22px;
   margin-top: 10px;
   margin-bottom: 20px;
 }
@@ -533,6 +589,7 @@ export default {
 .sequence-area-box {
   background-color: #ddf;
   border: 2px solid purple;
+  border-radius: 6px;
   width: 100%;
   height: 100%;
   text-align: start;
@@ -556,8 +613,28 @@ export default {
 }
 
 #trash-area {
-  width: 100%;
+  width: 90%;
   height: 300px;
-  border: 2px dashed #faa;
+  // border-bottom: 2px dashed #faa;
+  border-radius: 8px;
+
+  img {
+    width: 100%;
+  }
+}
+
+.set-sequence-button {
+  border-radius: 8px;
+  background-color: aliceblue;
+  margin: 30px auto 0 auto;
+  padding: 10px 16px;
+  width: fit-content;
+  cursor: pointer;
+  
+  span {
+    font-weight: 600;
+    font-size: 1em;
+    color: #444;
+  }
 }
 </style>
